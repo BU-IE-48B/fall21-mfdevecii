@@ -1,37 +1,29 @@
-## Welcome to GitHub Pages
+# Progress Journal
 
-You can use the [editor on GitHub](https://github.com/BU-IE-48B/fall21-mfdevecii/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+**-----------------------------------------------------------------------------------------------------------**
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+[This](https://bu-ie-48b.github.io/fall21-mfdevecii/) page shows my works on Special Topics in Time Series Course. During all of these projects, RStudio is utilized for Data Manipulation and Presentation.
 
-### Markdown
+## Homework 1
+  
+**1)** [Here](files/HW0/HW0.html) is my beginning homework.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## Homework 2
 
-```markdown
-Syntax highlighted code block
+**2)** 
 
-# Header 1
-## Header 2
-### Header 3
+## Homework 3
 
-- Bulleted
-- List
+**3)** 
 
-1. Numbered
-2. List
+## Homework 4
 
-**Bold** and _Italic_ and `Code` text
+**4)** 
 
-[Link](url) and ![Image](src)
-```
+## Homework 5
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+**5)**
 
-### Jekyll Themes
+## Term Project
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/BU-IE-48B/fall21-mfdevecii/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+**6)** 
