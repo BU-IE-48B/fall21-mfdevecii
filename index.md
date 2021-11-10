@@ -6,7 +6,7 @@
 
 ## Homework 1
   
-**1)** [Here](files/HW0/HW0.html) is my beginning homework.
+**1)** [Here](Files/Homework1/Homework-1.html) is my first homework.
 
 ## Homework 2
 
