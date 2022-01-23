@@ -1,0 +1,159 @@
+---
+title: "IE48B Project Report - Group 3"
+author: "Liva Dogan 2019402219 - S. Turancan Burucu 2019402252 - M. Furkan Deveci 2019402255"
+date: "1/22/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(lubridate)
+library(ggplot2)
+library(rpart)
+library(rattle)
+library(nnet)
+```
+
+### 1. Introduction
+
+The objective of this problem is to predict the sign of the difference between the electricity demand and supply in the market, which is controlled by Energy Exchange Istanbul, EPIAS in Turkish. More technically, as EPIAS defines the problem, we are interested in finding the sign of difference between total volume of up and down instructions. The sign is determined as positive if down volume is larger than up volume, and vice versa.
+
+In order to ease the forecasting, dataset comes with different attributes related to electricity market such as weather forecast data of 7 big cities across Turkey. Weather information contains downward shortwave radiation at the surface, relative humidity at 2m above ground, temperature at 2m above ground, total cloud cover at the low cloud layer, wind speed at 10 meters height, and wind direction in degrees at 10 meters height.
+
+Electricity consumption and weather forecasts datasets are not ready to use in their raw version. To be able to use them, we need to manipulate them in appropriate way. Firstly, electricity consumption dataset is manipulated with below operations:
+
+1. Date information is converted from character to Date format.
+2. Day-of-week information is added to a new column called "day".
+3. Month information is added to a new column called "month".
+4. Sign information is added to a new column called "sign", which is determined by the sign of the column "net", which is     already provided in the dataset as the sum of total delivered consumption.
+
+```{r read and manipulate electricity data, include=TRUE}
+data = read.csv("bulk_imbalance.csv")
+data = as.data.table(data)
+data$date = as.Date(data$date)
+data[, day := weekdays(date)]
+data[, month := month(date)]
+
+data[, sign := ifelse(net >= 50, 1, 0)]
+data[sign == 0, sign := ifelse(net <= (-50), -1, 0)]
+```
+
+
+Then, we need to manipulate the weather forecast data to be able to use it as predictor. One way to obtain a more compact information is to use the means of forecast values for 7 different cities. We can easily obtain this information with the following code:
+
+```{r read and manipulate weather data, eval=FALSE, include=TRUE}
+weather = read.csv("2022-01-22_weather.csv")
+weather = as.data.table(weather)
+weather$date = as.Date(weather$date)
+weather = weather[order(date,hour),]
+
+count = as.Date("2019-01-01")
+data[, DSWRF_surface := 0]
+data[, RH_2.m.above.ground := 0]
+data[, TMP_2.m.above.ground := 0]
+data[, TCDC_low.cloud.layer := 0]
+data[, ws_10m := 0]
+data[, wdir_10m := 0]
+while (count < "2022-01-23")
+{
+  print(count)
+  for (i in 0:23) 
+  {
+    data[date == count & hour == i, DSWRF_surface := mean(weather[date == count & hour == i & variable == "DSWRF_surface"]$value)]
+    data[date == count & hour == i, RH_2.m.above.ground := mean(weather[date == count & hour == i & variable == "RH_2.m.above.ground"]$value)]
+    data[date == count & hour == i, TMP_2.m.above.ground := mean(weather[date == count & hour == i & variable == "TMP_2.m.above.ground"]$value)]
+    data[date == count & hour == i, TCDC_low.cloud.layer := mean(weather[date == count & hour == i & variable == "TCDC_low.cloud.layer"]$value)]
+    data[date == count & hour == i, ws_10m := mean(weather[date == count & hour == i & variable == "ws_10m"]$value)]
+    data[date == count & hour == i, wdir_10m := mean(weather[date == count & hour == i & variable == "wdir_10m"]$value)]
+  }
+  count = count + 1
+}
+
+data_test = tail(data, 24)
+data_train = data[1:(nrow(data) - nrow(data_test)),]
+```
+
+After necessary manipulations, our data is ready to be used in a forecasting model. We split our data into training and test sets in order to measure the accuracy values of different approaches. Then, different approaches like linear regression, multinomial regression, and classification tree are used to predict the sign of total imbalance in electricity consumption. After measuring accuracy of each model, we determined to use the classification tree approach without using weather information. Accuracy calculations and results for each model can be seen later on this report.
+
+### 2. Related Literature
+
+Since the materials provided during lecture hours and project description report have the adequate information for us to build a forecasting model for this problem, any additional literature is not used during the project.
+
+### 3. Approach
+
+As mentioned above, we have tried different models and obtained different accuracy values for each model. Different models and their accuracy values can be seen below:
+
+```{r models, eval=FALSE, include=TRUE}
+#predicts net value by using linear regression with predictors hour, day, and month
+model1 = lm(net ~ as.factor(hour) + as.factor(day) + as.factor(month), data_train)
+data_test[, net_pred1 := predict(model1, data_test)]
+data_test[, sign_pred1 := ifelse(net_pred1 >= 50, 1, NA)]
+data_test[is.na(sign_pred1), sign_pred1 := ifelse(net_pred1 <= (-50), -1, 0)]
+data_test[, acc1 := ifelse(sign == sign_pred1, 1, 0)]
+#0.4705882 - accuracy calculated with test set of last 34 hours
+#0.5454545 - accuracy calculated with test set of last 154 hours
+#0.5324675 - accuracy calculated with test set of last 322 hours
+
+#predicts net value by using linear regression with predictors hour, day, and month and weather forecast data
+model2 = lm(net ~ as.factor(hour) + as.factor(day) + as.factor(month) + DSWRF_surface + RH_2.m.above.ground + TMP_2.m.above.ground + 
+              TCDC_low.cloud.layer + ws_10m + wdir_10m, data_train)
+data_test[, net_pred2 := predict(model2, data_test)]
+data_test[, sign_pred2 := ifelse(net_pred2 >= 50, 1, 0)]
+data_test[sign_pred2 == 0, sign_pred2 := ifelse(net_pred2 <= (-50), -1, 0)]
+data_test[, acc2 := ifelse(sign == sign_pred2, 1, 0)]
+#0.5588235 - accuracy calculated with test set of last 34 hours
+#0.5454545 - accuracy calculated with test set of last 154 hours
+#0.5279503 - accuracy calculated with test set of last 322 hours
+
+#predicts sign by using multinomial regression with predictors weather forecast data
+model3 = multinom(sign ~ DSWRF_surface + RH_2.m.above.ground + TMP_2.m.above.ground + 
+                    TCDC_low.cloud.layer + ws_10m + wdir_10m, data_train)
+data_test[, sign_pred3 := predict(model3, newdata = data_test, "class")]
+data_test[, acc3 := ifelse(sign == sign_pred3, 1, 0)]
+#0.6764706 - accuracy calculated with test set of last 34 hours
+#0.6168831 - accuracy calculated with test set of last 154 hours
+#0.5838509 - accuracy calculated with test set of last 322 hours
+
+#predicts sign by using classification tree with predictors hour, day, and month
+model4 = rpart(as.factor(sign) ~ as.factor(hour) + as.factor(day) + as.factor(month),
+               data_train, control = rpart.control(minsplit = 20, minbucket = 10, cp = 0, maxdepth = 5))
+data_test[, sign_pred4 := predict(model4, data_test, type = "class")]
+data_test[, acc4 := ifelse(sign == sign_pred4, 1, 0)]
+#0.8235294 - accuracy calculated with test set of last 34 hours
+#0.6493506 - accuracy calculated with test set of last 154 hours
+#0.5807453 - accuracy calculated with test set of last 322 hours
+
+#predicts sign by using classification tree with predictors weather forecast data
+model5 = rpart(as.factor(sign) ~ DSWRF_surface + RH_2.m.above.ground + TMP_2.m.above.ground + 
+                 TCDC_low.cloud.layer + ws_10m + wdir_10m,
+               data_train, control = rpart.control(minsplit = 20, minbucket = 10, cp = 0, maxdepth = 5))
+data_test[, sign_pred5 := predict(model5, data_test, type = "class")]
+data_test[, acc5 := ifelse(sign == sign_pred5, 1, 0)]
+#0.6176471 - accuracy calculated with test set of last 34 hours
+#0.5454545 - accuracy calculated with test set of last 154 hours
+#0.5372671 - accuracy calculated with test set of last 322 hours
+```
+
+Noting that these accuracy values are not calculated from up-to-date data*, the most accurate and consistent model becomes model4, which uses hour, day, and month information to predict the sign of total imbalance with classification tree approach.
+
+*Accuracy values are calculated on the day when the project is announced. Therefore, the codes in this chapter are not executed. However, executable version of codes are available at the end of this report.
+
+### 4. Results
+
+During the project submission period, we used the model4 for predictions. Unfortunately, the submissions for first few days were predicted the opposite sign due to misunderstanding the dataset and the project description. The accuracy values for our forecasts can be seen on project leaderboard.
+
+### 5. Conclusion
+
+In conclusion, the goal of predicting the sign of electricity balance in the market to take position accordingly is reached after a few steps. Firstly, dataset is read and manipulations on the raw data are operated. Then, weather forecasts with diverse types of measurements are included to the main data. The information of the weather forecasts consisted of the following; downward shortwave radiation at the surface, relative humidity at 2m above ground, temperature at 2m above ground, total cloud cover at the low cloud layer, wind speed at 10 meters height, and wind direction in degrees at 10 meters height. After additional manipulations are carried out, train and test sets are created to start building models. Finally multiple models are created, which were linear regressions with diverse combinations of different regressors, multinomial linear regression and 2 classification tree models(depth parameter=5) with and without weather information. During the related test period, best accuracy is acquired by classification tree(depth parameter=5) using hour,day,month information and this model is chosen to make all of the forecasts. For further extensions, it would be perfect to use qualitative methods and to combine them to the chosen model. After presenting the model, expert opinion should be taken for new analyses and be included into decisions making process. 
+
+To reach the RMD file, please click [here](https://bu-ie-48b.github.io/fall21-mfdevecii/files/Project/IE48B_Project_Report_Group3.RMD)
+
+To reach the source code of all models that are tried, please click [here](https://bu-ie-48b.github.io/fall21-mfdevecii/files/Project/IE48B_Project_Group3_AllModels.R)
+
+To reach the source code of the model used for submission, please click [here](https://bu-ie-48b.github.io/fall21-mfdevecii/files/Project/IE48B_Project_Group3_FinalModel.R)
+
+
+
+
+
