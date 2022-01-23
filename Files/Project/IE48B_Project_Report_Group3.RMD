@@ -147,11 +147,11 @@ During the project submission period, we used the model4 for predictions. Unfort
 
 In conclusion, the goal of predicting the sign of electricity balance in the market to take position accordingly is reached after a few steps. Firstly, dataset is read and manipulations on the raw data are operated. Then, weather forecasts with diverse types of measurements are included to the main data. The information of the weather forecasts consisted of the following; downward shortwave radiation at the surface, relative humidity at 2m above ground, temperature at 2m above ground, total cloud cover at the low cloud layer, wind speed at 10 meters height, and wind direction in degrees at 10 meters height. After additional manipulations are carried out, train and test sets are created to start building models. Finally multiple models are created, which were linear regressions with diverse combinations of different regressors, multinomial linear regression and 2 classification tree models(depth parameter=5) with and without weather information. During the related test period, best accuracy is acquired by classification tree(depth parameter=5) using hour,day,month information and this model is chosen to make all of the forecasts. For further extensions, it would be perfect to use qualitative methods and to combine them to the chosen model. After presenting the model, expert opinion should be taken for new analyses and be included into decisions making process. 
 
-To reach the RMD file, please click [here](https://bu-ie-48b.github.io/fall21-mfdevecii/files/Project/IE48B_Project_Report_Group3.RMD)
+To reach the RMD file, please click [here](https://bu-ie-48b.github.io/fall21-mfdevecii/Files/Project/IE48B_Project_Report_Group3.RMD)
 
-To reach the source code of all models that are tried, please click [here](https://bu-ie-48b.github.io/fall21-mfdevecii/files/Project/IE48B_Project_Group3_AllModels.R)
+To reach the source code of all models that are tried, please click [here](https://bu-ie-48b.github.io/fall21-mfdevecii/Files/Project/IE48B_Project_Group3_AllModels.R)
 
-To reach the source code of the model used for submission, please click [here](https://bu-ie-48b.github.io/fall21-mfdevecii/files/Project/IE48B_Project_Group3_FinalModel.R)
+To reach the source code of the model used for submission, please click [here](https://bu-ie-48b.github.io/fall21-mfdevecii/Files/Project/IE48B_Project_Group3_FinalModel.R)
 
 
 
